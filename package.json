@@ -5,6 +5,9 @@
     "sqlite3": "~3.0.5",
     "prompt": "~0.2.14"
   },
+  "bin": {
+    "bieber": "app.js"
+  },
   "description": "A bibliography manager",
   "main": "app.js",
   "scripts": {
