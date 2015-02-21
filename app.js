@@ -1,3 +1,4 @@
+#!/usr/local/bin/node
 /* Constants */
 var APP_NAME = 'bieber';
 
@@ -9,15 +10,20 @@ prompt.message = ">>>".magenta;
 var db;
 
 function createDB(){
-    var db = new sql.Database('.bieber', function(err, ev){
-        if(!err) console.log("Successfully initialized empty .bieber file");
+    fs.exists('.bieber', function(exists){
+        if(!exists){
+            db = new sql.Database('.bieber', function(err, ev){
+                if(!err) console.log("Successfully initialized empty .bieber file");
+            });
+            db.run("CREATE TABLE ref(id INTEGER PRIMARY KEY ASC," + 
+                                    "name TEXT," + 
+                                    "url TEXT," +
+                                    "desc TEXT," +
+                                    "accessed TEXT)");
+        } else {
+            console.log("There appears to be a .bieber file in this directory already.");
+        }
     });
-    db.run("CREATE TABLE ref(id INTEGER PRIMARY KEY ASC," + 
-                            "name TEXT," + 
-                            "url TEXT," +
-                            "desc TEXT," +
-                            "accessed TEXT)");
-    return db;
 }
 
 function usage() {
