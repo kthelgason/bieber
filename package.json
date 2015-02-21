@@ -2,7 +2,7 @@
   "name": "bieber",
   "version": "0.0.1",
   "dependencies": {
-    "sqlite3": "~3.0.5"   
+    "sqlite3": "~3.0.5"
   },
   "description": "A bibliography manager",
   "main": "app.js",
