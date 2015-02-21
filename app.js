@@ -12,6 +12,7 @@ function createDB(){
     var db = new sql.Database('.bieber', function(err, ev){
         if(!err) console.log("Successfully initialized empty .bieber file");
     });
+    //TODO: add timestamp
     db.run("CREATE TABLE ref(id INTEGER PRIMARY KEY ASC," + 
                             "name TEXT," + 
                             "url TEXT," +
@@ -44,9 +45,22 @@ function listRecords(format){
     db.all("SELECT name, url, desc FROM ref", function(err, result){
         if(err) console.log(err);
         result.forEach(function(obj) {
-            console.log(obj);
+            if(format == '-b'){
+                bibtexify(obj);
+            } else {
+                //TODO: pretty-printing
+                console.log(obj);
+            }
         });
     });
+}
+
+function bibtexify(obj){
+    var string = "@misc{%s,\n" + 
+        "\ttitle = {%s},\n" + 
+        "\thowpublished = {\\url{%s}},\n" + 
+        "\tnote = {Accessed: %d-%d-%d}\n}";
+    console.log(string, obj.name, obj.name, obj.url, 2012, 10, 10);
 }
 
 function addRecord(name, url){
