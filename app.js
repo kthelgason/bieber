@@ -22,6 +22,7 @@ function createDB(){
 function usage() {
     console.log("\t%s init [project name]", APP_NAME);
     console.log("\t%s add [name] [url]", APP_NAME);
+    console.log("\t%s list [-b]", APP_NAME);
 }
 
 function withDb(fn, args){
@@ -39,7 +40,16 @@ function withDb(fn, args){
     }
 }
 
-function addRecord(vals){
+function listRecords(format){
+    db.all("SELECT name, url, desc FROM ref", function(err, result){
+        if(err) console.log(err);
+        result.forEach(function(obj) {
+            console.log(obj);
+        });
+    });
+}
+
+function addRecord(name, url){
     console.log("Would you like to add a description now?");
     prompt.get([{
         name: 'answer',
@@ -48,11 +58,11 @@ function addRecord(vals){
     }], function(err, res){
         if(res.answer == 'y'){
             prompt.get(['description'], function(err, res){
-                insertRecord(vals[0],vals[1], res.description);    
+                insertRecord(name, url, res.description);    
             });
             return;
         }
-        insertRecord(vals[0],vals[1], "");    
+        insertRecord(name, url, "");    
     });
 }
 
@@ -71,6 +81,8 @@ function parseCommand(line) {
         createDB();
     } else if(line[0] == 'add'){
         withDb(addRecord, line.slice(1));
+    } else if(line[0] == 'list' || line[0] == 'ls'){
+        withDb(listRecords, line.slice(1));
     } else {
         console.log("No command specified!");
         console.log("Usage:");
