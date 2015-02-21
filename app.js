@@ -12,11 +12,11 @@ function createDB(){
     var db = new sql.Database('.bieber', function(err, ev){
         if(!err) console.log("Successfully initialized empty .bieber file");
     });
-    //TODO: add timestamp
     db.run("CREATE TABLE ref(id INTEGER PRIMARY KEY ASC," + 
                             "name TEXT," + 
                             "url TEXT," +
-                            "desc TEXT)");
+                            "desc TEXT," +
+                            "accessed TEXT)");
     return db;
 }
 
@@ -42,7 +42,7 @@ function withDb(fn, args){
 }
 
 function listRecords(format){
-    db.all("SELECT name, url, desc FROM ref", function(err, result){
+    db.all("SELECT name, url, desc, accessed FROM ref", function(err, result){
         if(err) console.log(err);
         result.forEach(function(obj) {
             if(format == '-b'){
@@ -59,8 +59,8 @@ function bibtexify(obj){
     var string = "@misc{%s,\n" + 
         "\ttitle = {%s},\n" + 
         "\thowpublished = {\\url{%s}},\n" + 
-        "\tnote = {Accessed: %d-%d-%d}\n}";
-    console.log(string, obj.name, obj.name, obj.url, 2012, 10, 10);
+        "\tnote = {Accessed: %s}\n}";
+    console.log(string, obj.name, obj.name, obj.url, obj.accessed);
 }
 
 function addRecord(name, url){
@@ -81,7 +81,8 @@ function addRecord(name, url){
 }
 
 function insertRecord(name, url, desc){
-    db.run("INSERT INTO ref(name, url, desc)  VALUES(?, ?, ?)",
+    db.run("INSERT INTO ref(name, url, desc, accessed) " +
+            "VALUES(?, ?, ?, (SELECT date('now')))",
             [name, url, desc], function(err, res){
        if(err) { console.log(err); }
        else {
