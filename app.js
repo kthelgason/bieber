@@ -7,6 +7,8 @@ var sql = require('sqlite3');
 var fs  = require('fs');
 var prompt = require('prompt');
 prompt.message = ">>>".magenta;
+
+var table = require('cli-table');
 var db;
 
 function createDB(){
@@ -50,14 +52,20 @@ function withDb(fn, args){
 function listRecords(format){
     db.all("SELECT name, url, desc, accessed FROM ref", function(err, result){
         if(err) console.log(err);
+        var tab = new table({
+            head: ['Name', 'URL', 'Description'],
+            colWidths: [30, 30, 40]
+        });
         result.forEach(function(obj) {
             if(format == '-b'){
                 bibtexify(obj);
             } else {
                 //TODO: pretty-printing
-                console.log(obj);
+                tab.push([obj.name, obj.url, obj.desc]);
             }
         });
+        if(format != '-b')
+            console.log(tab.toString());
     });
 }
 
