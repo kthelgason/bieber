@@ -50,18 +50,18 @@ function withDb(fn, args){
 }
 
 function listRecords(format){
-    db.all("SELECT name, url, desc, accessed FROM ref", function(err, result){
+    db.all("SELECT id, name, url, desc, accessed FROM ref", function(err, result){
         if(err) console.log(err);
         var tab = new table({
-            head: ['Name', 'URL', 'Description'],
-            colWidths: [30, 30, 40]
+            head: ['ID', 'Name', 'URL', 'Description'],
+            colWidths: [8, 30, 30, 40]
         });
         result.forEach(function(obj) {
             if(format == '-b'){
                 bibtexify(obj);
             } else {
                 //TODO: pretty-printing
-                tab.push([obj.name, obj.url, obj.desc]);
+                tab.push([obj.id, obj.name, obj.url, obj.desc]);
             }
         });
         if(format != '-b')
