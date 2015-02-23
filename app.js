@@ -77,6 +77,7 @@ function bibtexify(obj){
 }
 
 function addRecord(name, url){
+    //TODO: Add flag to skip prompting for description.
     console.log("Would you like to add a description now?");
     prompt.get([{
         name: 'answer',
