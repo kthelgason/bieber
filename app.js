@@ -51,7 +51,7 @@ function withDb(fn, args){
 
 function listRecords(format){
     db.all("SELECT id, name, url, desc, accessed FROM ref", function(err, result){
-        if(err) console.log(err);
+        if(err) console.error(err);
         var tab = new table({
             head: ['ID', 'Name', 'URL', 'Description'],
             colWidths: [8, 30, 30, 40]
@@ -60,7 +60,6 @@ function listRecords(format){
             if(format == '-b'){
                 bibtexify(obj);
             } else {
-                //TODO: pretty-printing
                 tab.push([obj.id, obj.name, obj.url, obj.desc]);
             }
         });
@@ -94,11 +93,31 @@ function addRecord(name, url){
     });
 }
 
+function deleteRecord(id){
+    db.get("SELECT * FROM ref WHERE id = ?", id, function(err, res){
+        if(err) {
+            console.error(err);
+        } else {
+            if(res){
+                db.run("DELETE FROM ref WHERE id = ?", id, function(err, res){
+                    if(err)
+                        console.error(err);
+                    else {
+                        console.log("Successfully removed item %d", id);
+                    }
+                });
+            } else {
+                console.log("No such entry!");
+            }
+        }
+    });
+}
+
 function insertRecord(name, url, desc){
     db.run("INSERT INTO ref(name, url, desc, accessed) " +
             "VALUES(?, ?, ?, (SELECT date('now')))",
             [name, url, desc], function(err, res){
-       if(err) { console.log(err); }
+       if(err) { console.error(err); }
        else {
            console.log("Success!");
        }
@@ -112,6 +131,8 @@ function parseCommand(line) {
         withDb(addRecord, line.slice(1));
     } else if(line[0] == 'list' || line[0] == 'ls'){
         withDb(listRecords, line.slice(1));
+    } else if(line[0] == 'remove' || line[0] == 'rm'){
+        withDb(deleteRecord, line.slice(1));
     } else {
         console.log("No command specified!");
         console.log("Usage:");
