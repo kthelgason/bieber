@@ -1,6 +1,7 @@
 #!/usr/local/bin/node
 /* Constants */
 var APP_NAME = 'bieber';
+var SUPPORTED_TYPES = ['online', 'journal'];
 
 
 var sql = require('sqlite3');
@@ -10,6 +11,27 @@ prompt.message = ">>>".magenta;
 
 var table = require('cli-table');
 var db;
+
+var bibtexify = {
+    online: function(obj){
+        var string = "@misc{%s,\n" + 
+            "\ttitle = {%s},\n" + 
+            "\thowpublished = {\\url{%s}},\n" + 
+            "\tnote = {Accessed: %s}\n}";
+        console.log(string, obj.name, obj.name, obj.url, obj.accessed);
+    },
+    journal: function(obj){
+        //Required fields: author, title, journal, year, volume
+        var string = "@article{%s,\n" + 
+            "\ttitle = {%s},\n" + 
+            "\tauthor = {TODO},\n" + 
+            "\tjournal = {TODO},\n" + 
+            "\tyear = {TODO},\n" + 
+            "\tvolume = {TODO},\n}";
+        console.log(string, obj.name, obj.name);
+     }
+};
+
 
 function createDB(){
     fs.exists('.bieber', function(exists){
@@ -21,6 +43,7 @@ function createDB(){
                                     "name TEXT," + 
                                     "url TEXT," +
                                     "desc TEXT," +
+                                    "type TEXT," +
                                     "accessed TEXT)");
         } else {
             console.log("There appears to be a .bieber file in this directory already.");
@@ -30,7 +53,7 @@ function createDB(){
 
 function usage() {
     console.log("\t%s init [project name]", APP_NAME);
-    console.log("\t%s add [name] [url]", APP_NAME);
+    console.log("\t%s add [name] [url] --type [TYPE]", APP_NAME);
     console.log("\t%s list [-b]", APP_NAME);
 }
 
@@ -50,34 +73,40 @@ function withDb(fn, args){
 }
 
 function listRecords(format){
-    db.all("SELECT id, name, url, desc, accessed FROM ref", function(err, result){
-        if(err) console.error(err);
+    db.all("SELECT id, name, url, type, desc, accessed FROM ref", function(err, result){
+        if(err) {
+            console.error(err);
+            return;
+        }
         var tab = new table({
             head: ['ID', 'Name', 'URL', 'Description'],
             colWidths: [8, 30, 30, 40]
         });
         result.forEach(function(obj) {
             if(format == '-b'){
-                bibtexify(obj);
+                bibtexify[obj.type](obj);
             } else {
                 tab.push([obj.id, obj.name, obj.url, obj.desc]);
             }
         });
-        if(format != '-b')
+        if(format != '-b'){
             console.log(tab.toString());
+        }
     });
-}
-
-function bibtexify(obj){
-    var string = "@misc{%s,\n" + 
-        "\ttitle = {%s},\n" + 
-        "\thowpublished = {\\url{%s}},\n" + 
-        "\tnote = {Accessed: %s}\n}";
-    console.log(string, obj.name, obj.name, obj.url, obj.accessed);
 }
 
 function addRecord(name, url){
     //TODO: Add flag to skip prompting for description.
+    var type = 'online';
+    if(arguments[2] === '--type'){
+        if(SUPPORTED_TYPES.indexOf(arguments[3]) >= 0){
+            type = arguments[3];
+        } else {
+            console.error('Unsupported reference type ' + type + '. Supported types are:');
+            console.error(SUPPORTED_TYPES);
+            return;
+        }
+    }
     console.log("Would you like to add a description now?");
     prompt.get([{
         name: 'answer',
@@ -86,11 +115,11 @@ function addRecord(name, url){
     }], function(err, res){
         if(res.answer == 'y'){
             prompt.get(['description'], function(err, res){
-                insertRecord(name, url, res.description);    
+                insertRecord(name, url, type, res.description);    
             });
             return;
         }
-        insertRecord(name, url, "");    
+        insertRecord(name, url, type, "");    
     });
 }
 
@@ -114,10 +143,10 @@ function deleteRecord(id){
     });
 }
 
-function insertRecord(name, url, desc){
-    db.run("INSERT INTO ref(name, url, desc, accessed) " +
-            "VALUES(?, ?, ?, (SELECT date('now')))",
-            [name, url, desc], function(err, res){
+function insertRecord(name, url, type, desc){
+    db.run("INSERT INTO ref(name, url, desc, type, accessed) " +
+            "VALUES(?, ?, ?, ?, (SELECT date('now')))",
+            [name, url, desc, type], function(err, res){
        if(err) { console.error(err); }
        else {
            console.log("Success!");
