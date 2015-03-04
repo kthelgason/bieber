@@ -20,6 +20,7 @@ var bibtexify = {
     },
     journal: function(obj){
         //Required fields: author, title, journal, year, volume
+        // FIXME:
         var string = "@article{%s,\n" + 
             "\ttitle = {%s},\n" + 
             "\tauthor = {TODO},\n" + 
@@ -47,6 +48,9 @@ function usage() {
     console.log("\t%s list [-b]", APP_NAME);
 }
 
+/*
+ * This function is shit. I must remember to fix it sometime.
+ */
 function listRecords(format){
     db.fetch_all(function(err, result){
         if(err) {
@@ -58,13 +62,13 @@ function listRecords(format){
             colWidths: [8, 30, 30, 40]
         });
         result.forEach(function(obj) {
-            if(format === '-b'){
+            if(format[0] === '-b'){
                 bibtexify[obj.type](obj);
             } else {
                 tab.push([obj.id, obj.name, obj.url, obj.desc]);
             }
         });
-        if(format !== '-b'){
+        if(format[0] !== '-b'){
             console.log(tab.toString());
         }
     });
@@ -80,10 +84,12 @@ function insertRecord(name, url, type, desc){
     });
 }
 
-function addRecord(name, url){
+function addRecord(params){
     //FIXME: Add flag to skip prompting for description.
     //FIXME: Also actually fix to make less terribad.
     var type = 'online';
+    var name = params[0];
+    var url = params[1];
     if(arguments[2] === '--type'){
         if(SUPPORTED_TYPES.indexOf(arguments[3]) >= 0){
             type = arguments[3];

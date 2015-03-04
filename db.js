@@ -89,7 +89,7 @@ exports.remove_by_id = function(id, callback){
         callback(err);
         return;
     }
-    db.fetch_by_id(id, function(err, res){
+    this.fetch_by_id(id, function(err, res){
         if(err) {
             callback(err);
         } else {
